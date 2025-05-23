@@ -18,7 +18,7 @@ figure_traces = {
         "yaxis_title": "Value",
         "graph_id": "policy-graph",
         "traces": [
-            {"name": "Tax Rate_{%GDP}", "variable": ":Tax_{Frac}", "multiplier": 100, "units": "%"},
+            {"name": "Tax Rate_{\%GDP}", "variable": ":Tax_{Frac}", "multiplier": 100, "units": "%"},
             {"name": "Govt Spending", "variable": ":Spend_{Frac}", "multiplier": 100, "units": "%"},
             {"name": "Bank Lending", "variable": ":Lend_{Frac}", "multiplier": 100, "units": "%"},
             {"name": "Bank Spending", "variable": ":BankSpend_{Frac}", "multiplier": 100, "units": "%"},
@@ -32,8 +32,8 @@ figure_traces = {
         "yaxis_title": "Debt % GDP",
         "graph_id": "debt-graph",
         "traces": [
-            {"name": 'Gov Debt_{%GDP}', "variable": ":Gov_{Debt}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": 'Private Debt_{%GDP}', "variable": ":Priv_{Debt}^{%GDP}", "multiplier": 1, "units": "%"}
+            {"name": 'Gov Debt_{\%GDP}', "variable": ":Gov_{Debt}^{%GDP}", "multiplier": 1, "units": "%"},
+            {"name": 'Private Debt_{\%GDP}', "variable": ":Priv_{Debt}^{%GDP}", "multiplier": 1, "units": "%"}
         ]
     },
     "fig_money": {
@@ -55,9 +55,9 @@ figure_traces = {
         "yaxis_title": "%",
         "graph_id": "int-graph",
         "traces": [
-            {"name": "Gov Int_{%GDP}", "variable": ":Gov_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": "Priv Int_{%GDP}", "variable": ":Priv_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": "GDP_{Rate of Growth %}", "variable": ":GDP_{inc}", "multiplier": 1, "units": "%"}
+            {"name": "Gov Int_{\%GDP}", "variable": ":Gov_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
+            {"name": "Priv Int_{\%GDP}", "variable": ":Priv_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
+            {"name": "GDP_{Rate of Growth \%}", "variable": ":GDP_{inc}", "multiplier": 1, "units": "%"}
         ]
     }
 }
@@ -570,7 +570,7 @@ app.layout = dbc.Container(
             ],
             className="ms-1",
         ),
-        dcc.Store(id='session-state', storage_type='session', data={'is_cleared': False, 'is_running': True}),
+        dcc.Store(id='session-state', storage_type='session', data={'do_clear_figs': True, 'is_running': True}),
         dcc.Interval(
             id='interval-component',
             interval=500,  # in milliseconds
@@ -644,7 +644,7 @@ def handle_control(n_clicks_rerun, n_clicks_play, session_state, current_icon):
                 break
 
         session_state['is_running'] = False
-        session_state['is_cleared'] = True
+        session_state['do_clear_figs'] = True
         session_state['policy_change_times'] = []
         print("Setting: ", session_state)
         return session_state, False, html.I(className="fas fa-play"), "btn btn-primary me-2", False
@@ -658,7 +658,7 @@ def handle_control(n_clicks_rerun, n_clicks_play, session_state, current_icon):
         else:
             minsky.running(True)
             session_state['is_running'] = True
-            session_state['is_cleared'] = False
+            session_state['do_clear_figs'] = False
             return session_state, False, html.I(className="fas fa-pause"), "btn btn-primary me-2", True
 
 
@@ -680,22 +680,19 @@ def update_graphs(n_intervals, session_state):
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
     # Handle clearing
-    if session_state.get('is_cleared', False):
-        # Create patches for all figures using figure_traces
+    if session_state.get('do_clear_figs', True):
+        print("Clearing figures", session_state)
+        session_state['do_clear_figs'] = False
         patches = []
         for fig_id, fig_config in figure_traces.items():
             patched_fig = Patch()
-            patched_fig.data = [
-                go.Scatter(x=[], y=[], mode='lines', name=trace["name"])
-                for trace in fig_config["traces"]
-            ]
-            # Set initial xaxis range
-            patched_fig.layout.xaxis.range = [0, 100]
+            for i in range(len(fig_config["traces"])):
+                patched_fig["data"][i]["x"] = []
+                patched_fig["data"][i]["y"] = []
             patches.append(patched_fig)
-        
-        # Reset the cleared state
-        session_state['is_cleared'] = False
-        return patches + [False]
+
+        return patches + [True]
+
     
     # Check if model is running
     if minsky.running() and session_state.get('is_running', True):
@@ -706,7 +703,7 @@ def update_graphs(n_intervals, session_state):
                 results = simulation_queue.get_nowait()
             
             if results:
-                print("Results: ", results)
+                # print("Results: ", results)
                 # Create patches for all figures
                 patches = []
                 sim_time = results[0][0]
@@ -727,35 +724,6 @@ def update_graphs(n_intervals, session_state):
             pass
     print('paused')
     return [no_update for _ in figure_traces.keys()] + [True]
-
-
-# @app.callback(
-#     Output('policy-graph', 'figure', allow_duplicate=True),
-#     Input('policy-graph', 'clickData'),
-#     prevent_initial_call=True
-# )
-# def update_vertical_line(clickData):
-#     # Create a patch to update the figure
-#     patched_fig = Patch()
-    
-#     if clickData:
-#         x_position = clickData['points'][0]['x']
-#         print("X Position: ", x_position)
-#         # Update or add the shape
-#         patched_fig['layout']['shapes'] = [{
-#             'type': 'line',
-#             'x0': x_position,
-#             'x1': x_position,
-#             'y0': 0,
-#             'y1': 1,
-#             'yref': 'paper',
-#             'line': {'color': 'black', 'dash': 'dash', 'width': 1}
-#         }]
-#     else:
-#         # Remove the shape when not clicking
-#         patched_fig['layout']['shapes'] = []
-    
-#     return patched_fig
 
 
 ## Slider callbacks
@@ -825,29 +793,35 @@ def update_latest_values(n_intervals):
     [Output(fig_config["graph_id"], 'figure', allow_duplicate=True) for fig_id, fig_config in figure_traces.items()] + 
     [Output('session-state', 'data', allow_duplicate=True)],
     [Input(slider["id"], "value") for slider in slider_variables if slider["minsky_var"] is not None],
+    [Input("rerun-button", "n_clicks")],
     [State('session-state', 'data')],
     prevent_initial_call=True
 )
-def update_policy_lines(tax_rate, spend_frac, lend_frac, bank_spend_frac, 
-                       interest_rate, velocity, session_state):
+def update_policy_lines(*args):
     # Get the triggering input
     ctx = callback_context
     if not ctx.triggered:
         return no_update, no_update, no_update, no_update, session_state
     
+    # Get slider values and session state
+    slider_values = args[:-2]  # All args except last two (rerun_n_clicks and session_state)
+    rerun_n_clicks = args[-2]
+    session_state = args[-1]
+    
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    print("Trigger ID: update_policy_lines: ", trigger_id)
     
     # Clear policy change times if simulation is reset
-    if trigger_id == 'session-state' and session_state.get('is_cleared', False):
-        print("Clearing policy change times")
+    if trigger_id == 'rerun-button' :
+        print("Clearing policy change times", session_state, "rerun_n_clicks", rerun_n_clicks)
         session_state['policy_change_times'] = []
-        return no_update, no_update, no_update, no_update, session_state
+        patched_policy = Patch()
+        patched_policy['layout']['shapes'] = []
+        return patched_policy, patched_policy, patched_policy, patched_policy,  session_state
     
     # Create patches for all figures
-    patched_policy = Patch()
-    patched_money = Patch()
-    patched_debt = Patch()
-    patched_int = Patch()
+    patched = Patch()
+
     
     # Get current simulation time
     current_time = minsky.t()
@@ -877,12 +851,9 @@ def update_policy_lines(tax_rate, spend_frac, lend_frac, bank_spend_frac,
             })
     
     # Update all figures with the shapes
-    patched_policy['layout']['shapes'] = shapes
-    patched_money['layout']['shapes'] = shapes
-    patched_debt['layout']['shapes'] = shapes
-    patched_int['layout']['shapes'] = shapes
-    
-    return patched_policy, patched_money, patched_debt, patched_int, session_state
+    patched['layout']['shapes'] = shapes
+    return [patched for _ in figure_traces.keys()] + [session_state]
+
 
 if __name__ == "__main__":
     # cProfile.run('app.run(debug=True)', 'output.prof')
