@@ -175,5 +175,5 @@ cython_debug/
 
 
 pymisnky.so
-app_dash1 copy.py
+*copy*.py
 *.mky#*

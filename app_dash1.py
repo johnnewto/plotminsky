@@ -7,160 +7,30 @@ from pyminsky import minsky
 import threading
 import queue
 import time
-
+import json
 import re
+import os
 
-# Define figure and trace structure
-figure_traces = {
-    "fig_policy": {
-        "title": "Policy Variables",
-        "xaxis_title": "Time",
-        "yaxis_title": "Value",
-        "graph_id": "policy-graph",
-        "traces": [
-            {"name": "Tax Rate_{\%GDP}", "variable": ":Tax_{Frac}", "multiplier": 100, "units": "%"},
-            {"name": "Govt Spending", "variable": ":Spend_{Frac}", "multiplier": 100, "units": "%"},
-            {"name": "Bank Lending", "variable": ":Lend_{Frac}", "multiplier": 100, "units": "%"},
-            {"name": "Bank Spending", "variable": ":BankSpend_{Frac}", "multiplier": 100, "units": "%"},
-            {"name": "Interest Rate", "variable": ":Interest_{Rate}", "multiplier": 100, "units": "%"},
-            {"name": "Velocity", "variable": ":Velocity", "multiplier": 1, "units": ""}
-        ]
-    },
-    "fig_debt": {
-        "title": "Debt as % of GDP",
-        "xaxis_title": "Time",
-        "yaxis_title": "Debt % GDP",
-        "graph_id": "debt-graph",
-        "traces": [
-            {"name": 'Gov Debt_{\%GDP}', "variable": ":Gov_{Debt}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": 'Private Debt_{\%GDP}', "variable": ":Priv_{Debt}^{%GDP}", "multiplier": 1, "units": "%"}
-        ]
-    },
-    "fig_money": {
-        "title": "GDP, Money Supply and Bank Accounts",
-        "xaxis_title": "Time",
-        "yaxis_title": "Value",
-        "graph_id": "money-graph",
-        "traces": [
-            {"name": "GDP", "variable": ":GDP", "multiplier": 1, "units": ""},
-            {"name": "Money", "variable": ":Money", "multiplier": 1, "units": ""},
-            {"name": "Savers", "variable": ":Savers", "multiplier": 1, "units": ""},
-            {"name": "Borrowers", "variable": ":Borrowers", "multiplier": 1, "units": ""},
-            {"name": "Banks", "variable": ":Banks", "multiplier": 1, "units": ""}
-        ]
-    },
-    "fig_int": {
-        "title": "Interest Payments (%GDP) and GDP % Growth",
-        "xaxis_title": "Time",
-        "yaxis_title": "%",
-        "graph_id": "int-graph",
-        "traces": [
-            {"name": "Gov Int_{\%GDP}", "variable": ":Gov_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": "Priv Int_{\%GDP}", "variable": ":Priv_{Int}^{%GDP}", "multiplier": 1, "units": "%"},
-            {"name": "GDP_{Rate of Growth \%}", "variable": ":GDP_{inc}", "multiplier": 1, "units": "%"}
-        ]
-    }
-}
+# Enable Flask to watch config.json
+extra_files = ['config.json']
 
-# List of slider variables
-slider_variables = [
-    {
-        "id": "update-interval",
-        "label": "Update Interval",
-        "min": 100,
-        "max": 1000,
-        "step": 50,
-        "value": 200,
-        "marks": {i: f'{i}ms' for i in range(100, 1100, 100)},
-        "minsky_var": None,
-        "multiplier": 1,
-        "units": ""
-    },
-    {
-        "id": "tax-rate-slider",
-        "label": "Tax (% GDP)",
-        "min": 0,
-        "max": 50,
-        "step": 1,
-        "marks": {i*10: f'{i*10}%' for i in range(11)},
-        "minsky_var": ":Tax_{Frac}",
-        "multiplier": 100,
-        "units": "%"
-    },
-    {
-        "id": "spend-frac-slider",
-        "label": "Govt Spending (% GDP)",
-        "min": 0,
-        "max": 50,
-        "step": 1,
-        "marks": {i*10: f'{i*10}%' for i in range(11)},
-        "minsky_var": ":Spend_{Frac}",
-        "multiplier": 100,
-        "units": "%"
-    },
-    {
-        "id": "lend-frac-slider",
-        "label": "Banks Lending (% GDP)",
-        "min": 0,
-        "max": 20,
-        "step": 1,
-        "marks": {i*10: f'{i*10}%' for i in range(11)},
-        "minsky_var": ":Lend_{Frac}",
-        "multiplier": 100,
-        "units": "%"
-    },
-    {
-        "id": "bank-spend-frac-slider",
-        "label": "Banks Spending (% Equity)",
-        "min": 0,
-        "max": 100,
-        "step": 1,
-        "marks": {i*20: f'{i*20}%' for i in range(6)},
-        "minsky_var": ":BankSpend_{Frac}",
-        "multiplier": 100,
-        "units": "%"
-    },
-    {
-        "id": "interest-rate-slider",
-        "label": "Interest Rate (%)",
-        "min": 0,
-        "max": 10,
-        "step": 0.1,
-        "marks": {i: f'{i}%' for i in range(11)},
-        "minsky_var": ":Interest_{Rate}",
-        "multiplier": 100,
-        "units": "%"
-    },
-    {
-        "id": "velocity-slider",
-        "label": "Velocity of Money (rate per year)",
-        "min": 0,
-        "max": 5,
-        "step": 0.1,
-        "marks": {i: f'{i}' for i in range(11)},
-        "minsky_var": ":Velocity",
-        "multiplier": 1,
-        "units": ""
-    }
-]
+# Load configuration from JSON file
+def load_config():
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+        return config['figs'], config['sliders']
 
+# Initial load of configuration
+figs, sliders = load_config()
 
-# figure_items = list(figures.items())
 # make a list of all the traces
 traces = []
-for fig_id, fig_config in figure_traces.items():
+for fig_config in figs:
     sublist = []
     for trace in fig_config["traces"]:
         trace["id"] = trace["variable"].replace(':', '').replace('{', '').replace('}', '').replace('^', '').replace('%', '')
         sublist.append(trace)
     traces.append(sublist)
-
-
-
-# traces = [trace for fig_id, fig_config in figure_traces.items() for trace in fig_config["traces"]]
-# for trace in traces:
-    # Create a clean ID by removing invalid characters
-    # trace["id"] = trace["variable"].replace(":", "").replace("{", "").replace("}", "").replace("^", "").replace("%", "")
 
 print([(trace["name"], trace["id"]) for sublist in traces for trace in sublist])
 
@@ -235,16 +105,13 @@ class SimulationThread(threading.Thread):
         results = []
         results.append([sim_time])
         
-        # Iterate through all traces in figure_traces to get values
-        for fig_id, fig_config in figure_traces.items():
+        # Iterate through all traces in figs to get values
+        for fig_config in figs:
             graphs = []
             for trace in fig_config["traces"]:
                 var_name = trace["variable"]
                 graphs.append(get_minsky_var(var_name) * trace["multiplier"])
             results.append(graphs)
-        
-        # Add time to results
-        # results['time'] = sim_time
         
         return results if not flatten else self.flatten(results)
 
@@ -278,24 +145,6 @@ class SimulationThread(threading.Thread):
                 
                 # Get current values
                 results = self.get_results()
-                # sim_time, gdp, gov_debt, priv_debt, money, savers, borrowers, banks, gov_int, priv_int, gdp_inc = self.get_results()
-                
-                # # Create results dictionary
-                # results = {
-                #     'time': sim_time,
-                #     'gdp': gdp,
-                #     'gov_debt': gov_debt,
-                #     'priv_debt': priv_debt,
-                #     'money': money,
-                #     'savers': savers,
-                #     'borrowers': borrowers,
-                #     'banks': banks,
-                #     'gov_int': gov_int,
-                #     'priv_int': priv_int,
-                #     'gdp_inc': gdp_inc
-                # }
-                
-                # Add new results
                 simulation_queue.put(results)
             
             time.sleep(0.01)  # Small sleep to prevent CPU hogging
@@ -343,7 +192,7 @@ def create_figures():
     # Create initial figures for all charts with proper layout
     figures = {}
     
-    for fig_id, fig_config in figure_traces.items():
+    for fig_config in figs:
         fig = go.Figure()
         
         # Add traces
@@ -450,7 +299,7 @@ tabs = dbc.Tabs(
                                 marks=slider["marks"],
                                 tooltip={"placement": "bottom", "always_visible": True}
                             ),
-                        ]) for slider in slider_variables
+                        ]) for slider in sliders
                     ]
                 ]),
             ],
@@ -499,7 +348,12 @@ app.layout = dbc.Container(
                             id="sidebar-column",
                             width={"size": 4, "order": 1},
                             # xs=12,  # Full width on extra small screens
-                            className="mt-4 border"
+                            className="mt-4 border",
+                            style={
+                                "maxHeight": "calc(100vh - 100px)",  # Set max height to viewport height minus some space for header
+                                "overflowY": "auto",  # Add vertical scrollbar when needed
+                                "padding": "10px"  # Add some padding
+                            }
                         ),
                         dbc.Col(
                             [
@@ -568,7 +422,7 @@ app.layout = dbc.Container(
                     }
                 ),
             ],
-            className="ms-1",
+            className="ms-1"
         ),
         dcc.Store(id='session-state', storage_type='session', data={'do_clear_figs': True, 'is_running': True}),
         dcc.Interval(
@@ -584,7 +438,7 @@ app.layout = dbc.Container(
             disabled=False
         )
     ],
-    fluid=True,
+    fluid=True
 )
 
 @callback(
@@ -625,7 +479,7 @@ def handle_control(n_clicks_rerun, n_clicks_play, session_state, current_icon):
 
         # make a list current values of the policy variables
         policy_vars = []
-        for slider in slider_variables:
+        for slider in sliders:
             if slider['minsky_var'] is not None:
                 policy_vars.append((slider['minsky_var'], get_minsky_var(slider['minsky_var'])))
 
@@ -665,7 +519,7 @@ def handle_control(n_clicks_rerun, n_clicks_play, session_state, current_icon):
 
 
 @callback(
-    [Output(fig_config["graph_id"], 'figure', allow_duplicate=True) for fig_id, fig_config in figure_traces.items()] + 
+    [Output(fig_config["graph_id"], 'figure', allow_duplicate=True) for fig_config in figs] + 
     [Output('interval-component', 'disabled', allow_duplicate=True)],
     [Input("interval-component", "n_intervals")],
     [State('session-state', 'data')],
@@ -675,7 +529,7 @@ def update_graphs(n_intervals, session_state):
     ctx = callback_context
     if not ctx.triggered:
         print('ctx not triggered')
-        return [no_update for _ in figure_traces.keys()] + [False]    
+        return [no_update for _ in figs] + [False]    
 
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
@@ -684,7 +538,7 @@ def update_graphs(n_intervals, session_state):
         print("Clearing figures", session_state)
         session_state['do_clear_figs'] = False
         patches = []
-        for fig_id, fig_config in figure_traces.items():
+        for fig_config in figs:
             patched_fig = Patch()
             for i in range(len(fig_config["traces"])):
                 patched_fig["data"][i]["x"] = []
@@ -718,12 +572,12 @@ def update_graphs(n_intervals, session_state):
                 return patches + [False]
             else:
                 print("No results in queue")
-                return [no_update for _ in figure_traces.keys()] + [False]
+                return [no_update for _ in figs] + [False]
         except queue.Empty:
             print("No results in queue")
             pass
     print('paused')
-    return [no_update for _ in figure_traces.keys()] + [True]
+    return [no_update for _ in figs] + [True]
 
 
 ## Slider callbacks
@@ -736,7 +590,7 @@ def update_interval(value):
     return value
 
 # Generate callbacks for each Minsky variable slider
-for slider in slider_variables:
+for slider in sliders:
     if slider['minsky_var'] is not None:
         callback(
             Output(slider['id'], "value"),
@@ -790,9 +644,9 @@ def update_latest_values(n_intervals):
 
 
 @app.callback(
-    [Output(fig_config["graph_id"], 'figure', allow_duplicate=True) for fig_id, fig_config in figure_traces.items()] + 
+    [Output(fig_config["graph_id"], 'figure', allow_duplicate=True) for fig_config in figs] + 
     [Output('session-state', 'data', allow_duplicate=True)],
-    [Input(slider["id"], "value") for slider in slider_variables if slider["minsky_var"] is not None],
+    [Input(slider["id"], "value") for slider in sliders if slider["minsky_var"] is not None],
     [Input("rerun-button", "n_clicks")],
     [State('session-state', 'data')],
     prevent_initial_call=True
@@ -852,9 +706,9 @@ def update_policy_lines(*args):
     
     # Update all figures with the shapes
     patched['layout']['shapes'] = shapes
-    return [patched for _ in figure_traces.keys()] + [session_state]
+    return [patched for _ in figs] + [session_state]
 
 
 if __name__ == "__main__":
     # cProfile.run('app.run(debug=True)', 'output.prof')
-    app.run(debug=True)
+    app.run(debug=True, extra_files=extra_files)

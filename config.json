@@ -1,0 +1,269 @@
+{
+    "figs": [
+        {
+            "title": "Policy Variables",
+            "xaxis_title": "Time",
+            "yaxis_title": "Value",
+            "graph_id": "policy-graph",
+            "traces": [
+                {
+                    "name": "Tax Rate_{\\%GDP}",
+                    "variable": ":Tax_{Frac}",
+                    "multiplier": 100,
+                    "units": "%"
+                },
+                {
+                    "name": "Govt Spending_{\\%GDP}",
+                    "variable": ":Spend_{Frac}",
+                    "multiplier": 100,
+                    "units": "%"
+                },
+                {
+                    "name": "Bank Lending_{\\%GDP}",
+                    "variable": ":Lend_{Frac}",
+                    "multiplier": 100,
+                    "units": "%"
+                },
+                {
+                    "name": "Bank Spending_{\\%Equity}",
+                    "variable": ":BankSpend_{Frac}",
+                    "multiplier": 100,
+                    "units": "%"
+                },
+                {
+                    "name": "Interest Rate_{\\%}",
+                    "variable": ":Interest_{Rate}",
+                    "multiplier": 100,
+                    "units": "%"
+                },
+                {
+                    "name": "Velocity_{year}",
+                    "variable": ":Velocity",
+                    "multiplier": 1,
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "title": "Debt_{% of GDP}",
+            "xaxis_title": "Time",
+            "yaxis_title": "Debt % GDP",
+            "graph_id": "debt-graph",
+            "traces": [
+                {
+                    "name": "Gov Debt_{\\%GDP}",
+                    "variable": ":Gov_{Debt}^{%GDP}",
+                    "multiplier": 1,
+                    "units": "%"
+                },
+                {
+                    "name": "Private Debt_{\\%GDP}",
+                    "variable": ":Priv_{Debt}^{%GDP}",
+                    "multiplier": 1,
+                    "units": "%"
+                }
+            ]
+        },
+        {
+            "title": "GDP, Money Supply and Bank Accounts",
+            "xaxis_title": "Time",
+            "yaxis_title": "Value",
+            "graph_id": "money-graph",
+            "traces": [
+                {
+                    "name": "GDP",
+                    "variable": ":GDP",
+                    "multiplier": 1,
+                    "units": ""
+                },
+                {
+                    "name": "Money",
+                    "variable": ":Money",
+                    "multiplier": 1,
+                    "units": ""
+                },
+                {
+                    "name": "Savers",
+                    "variable": ":Savers",
+                    "multiplier": 1,
+                    "units": ""
+                },
+                {
+                    "name": "Borrowers",
+                    "variable": ":Borrowers",
+                    "multiplier": 1,
+                    "units": ""
+                },
+                {
+                    "name": "Banks",
+                    "variable": ":Banks",
+                    "multiplier": 1,
+                    "units": ""
+                }
+            ]
+        },
+        {
+            "title": "Interest Payments (%GDP) and GDP % Growth",
+            "xaxis_title": "Time",
+            "yaxis_title": "%",
+            "graph_id": "int-graph",
+            "traces": [
+                {
+                    "name": "Gov Int_{\\%GDP}",
+                    "variable": ":Gov_{Int}^{%GDP}",
+                    "multiplier": 1,
+                    "units": "%"
+                },
+                {
+                    "name": "Priv Int_{\\%GDP}  ",
+                    "variable": ":Priv_{Int}^{%GDP}",
+                    "multiplier": 1,
+                    "units": "%"
+                },
+                {
+                    "name": "GDP_Rate of Growth_{\\%}",
+                    "variable": ":GDP_{inc}",
+                    "multiplier": 1,
+                    "units": "%"
+                }
+            ]
+        }
+    ],
+    "sliders": [
+        {
+            "id": "update-interval",
+            "label": "Update Interval",
+            "min": 100,
+            "max": 1000,
+            "step": 50,
+            "value": 200,
+            "marks": {
+                "100": "100ms",
+                "200": "200ms",
+                "300": "300ms",
+                "400": "400ms",
+                "500": "500ms",
+                "600": "600ms",
+                "700": "700ms",
+                "800": "800ms",
+                "900": "900ms",
+                "1000": "1000ms"
+            },
+            "minsky_var": null,
+            "multiplier": 1,
+            "units": ""
+        },
+        {
+            "id": "tax-rate-slider",
+            "label": "Tax (% GDP)",
+            "min": 0,
+            "max": 50,
+            "step": 1,
+            "marks": {
+                "0": "0%",
+                "10": "10%",
+                "20": "20%",
+                "30": "30%",
+                "40": "40%",
+                "50": "50%"
+            },
+            "minsky_var": ":Tax_{Frac}",
+            "multiplier": 100,
+            "units": "%"
+        },
+        {
+            "id": "spend-frac-slider",
+            "label": "Govt Spending (% GDP)",
+            "min": 0,
+            "max": 50,
+            "step": 1,
+            "marks": {
+                "0": "0%",
+                "10": "10%",
+                "20": "20%",
+                "30": "30%",
+                "40": "40%",
+                "50": "50%"
+            },
+            "minsky_var": ":Spend_{Frac}",
+            "multiplier": 100,
+            "units": "%"
+        },
+        {
+            "id": "lend-frac-slider",
+            "label": "Banks Lending (% GDP)",
+            "min": 0,
+            "max": 20,
+            "step": 1,
+            "marks": {
+                "0": "0%",
+                "5": "5%",
+                "10": "10%",
+                "15": "15%",
+                "20": "20%"
+            },
+            "minsky_var": ":Lend_{Frac}",
+            "multiplier": 100,
+            "units": "%"
+        },
+        {
+            "id": "bank-spend-frac-slider",
+            "label": "Banks Spending (% Equity)",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "marks": {
+                "0": "0%",
+                "20": "20%",
+                "40": "40%",
+                "60": "60%",
+                "80": "80%",
+                "100": "100%"
+            },
+            "minsky_var": ":BankSpend_{Frac}",
+            "multiplier": 100,
+            "units": "%"
+        },
+        {
+            "id": "interest-rate-slider",
+            "label": "Interest Rate (%)",
+            "min": 0,
+            "max": 10,
+            "step": 0.1,
+            "marks": {
+                "0": "0%",
+                "1": "1%",
+                "2": "2%",
+                "3": "3%",
+                "4": "4%",
+                "5": "5%",
+                "6": "6%",
+                "7": "7%",
+                "8": "8%",
+                "9": "9%",
+                "10": "10%"
+            },
+            "minsky_var": ":Interest_{Rate}",
+            "multiplier": 100,
+            "units": "%"
+        },
+        {
+            "id": "velocity-slider",
+            "label": "Velocity of Money (rate per year)",
+            "min": 0,
+            "max": 5,
+            "step": 0.1,
+            "marks": {
+                "0": "0",
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5"
+            },
+            "minsky_var": ":Velocity",
+            "multiplier": 1,
+            "units": ""
+        }
+    ]
+}
