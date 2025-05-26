@@ -94,7 +94,7 @@ all going well the app will be viewable at a url like
 
 ## Screenshots
 
-![PlotMinsky Dashboard](screenshots/dashboard.png)
+![PlotMinsky Dashboard](images/dashboard.png)
 
 *The main dashboard showing the Minsky model visualization*
 
