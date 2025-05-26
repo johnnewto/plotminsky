@@ -2,6 +2,9 @@
 
 A web application for Minsky modeling using Python and Dash.
 
+( Note: Limitation, it only handles 1 session
+To support multiple users without conflicts, we would need to create separate simulation instances per user:)
+
 ## Development Setup
 
 ### Prerequisites
