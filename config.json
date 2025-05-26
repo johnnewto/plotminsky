@@ -133,10 +133,10 @@
         {
             "id": "update-interval",
             "label": "Update Interval",
-            "min": 100,
+            "min": 300,
             "max": 1000,
             "step": 50,
-            "value": 200,
+            "value": 500,
             "marks": {
                 "100": "100ms",
                 "200": "200ms",

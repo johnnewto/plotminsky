@@ -147,20 +147,26 @@ class SimulationThread(threading.Thread):
                 results = self.get_results()
                 simulation_queue.put(results)
             
-            time.sleep(0.01)  # Small sleep to prevent CPU hogging
+            time.sleep(0.1)  # Small sleep to prevent CPU hogging
 
 # Create and start simulation thread
 sim_thread = SimulationThread()
 sim_thread.start()
 
+# Create the Dash application with the correct configuration
 app = Dash(
     __name__,
     external_stylesheets=[
         dbc.themes.SPACELAB, 
         dbc.icons.FONT_AWESOME,
-        '/assets/custom.css'
-    ]
+    ],
+    # url_base_pathname='/d1/',
+    # assets_folder='static',
+    # assets_url_path='/static'
 )
+
+# Expose the Flask server for FastAPI
+server = app.server
 
 # Initialize the Minsky model
 model_file = "BOMDwithGovernmentLive.mky"
@@ -708,7 +714,17 @@ def update_policy_lines(*args):
     patched['layout']['shapes'] = shapes
     return [patched for _ in figs] + [session_state]
 
+@app.server.route('/test')
+def test_route():
+    return "Test route is working"
+
+
 
 if __name__ == "__main__":
-    # cProfile.run('app.run(debug=True)', 'output.prof')
-    app.run(debug=True, extra_files=extra_files)
+
+    app.run(
+        debug=False,  # Disable debug mode in production
+        host='0.0.0.0',  # Bind to all interfaces
+        # port=8050,
+        extra_files=extra_files
+    )

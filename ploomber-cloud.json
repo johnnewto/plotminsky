@@ -1,0 +1,21 @@
+{
+    "id": "frosty-sound-5030",
+    "type": "docker",
+    "ignore": [
+        ".git",
+        ".gitignore",
+        "__pycache__",
+        "*.pyc",
+        "*.pyo",
+        "*.pyd",
+        ".Python",
+        "env/",
+        "venv/",
+        ".env",
+        ".venv/",
+        "*.so",
+        "*.zip",
+        "app-*.zip",
+        "**/*.zip"
+    ]
+}
